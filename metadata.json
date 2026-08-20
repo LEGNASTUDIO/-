@@ -1,0 +1,6 @@
+{
+  "name": "LEGNA | Hanji Craft & Light Objects",
+  "description": "Contemporary craft portfolio exploring Hanji, light, and architectural tactile forms.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

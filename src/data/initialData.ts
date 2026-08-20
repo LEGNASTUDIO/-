@@ -1,0 +1,171 @@
+import { WorkItem, ProcessStep, SiteContent } from '../types';
+
+export const INITIAL_WORKS: WorkItem[] = [
+  {
+    id: 'work-01',
+    numberCode: '01',
+    title: 'Light Object No.01',
+    subtitle: 'Luminescent Paper Sphere',
+    category: 'LIGHT',
+    year: '2026',
+    materials: 'Hanji / Bamboo / Warm LED (2700K)',
+    dimensions: '420 × 420 × 580 mm',
+    shortDescription: '한지의 닥섬유 결을 따라 빛이 부드럽게 퍼져나가는 조명 오브제.',
+    fullDescription: '전통 닥나무 껍질로 수제 제작된 순수 한지를 얇게 켜낸 대나무 살 위에 겹겹이 얹어 빚어낸 조명 오브제입니다. 전등을 켰을 때 불규칙한 섬유 조직이 만들어내는 미세한 음영은 빛에 깊이와 온기를 부여합니다.',
+    coverImage: 'https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?auto=format&fit=crop&w=1600&q=85', // Warm glowing light sculpture
+    detailImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=85', // Close tactile paper / architectural warmth
+    spaceImage: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1400&q=85', // Quiet room interior with ambient craft light
+    craftImage: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1200&q=85',
+    isFeatured: true,
+    order: 1,
+  },
+  {
+    id: 'work-02',
+    numberCode: '02',
+    title: 'Untitled No.02 (Fold & Shadow)',
+    subtitle: 'Layered Hanji Relief',
+    category: 'OBJECTS',
+    year: '2026',
+    materials: 'Handmade Dak Hanji / Natural Pine Frame',
+    dimensions: '600 × 900 × 45 mm',
+    shortDescription: '빛의 각도에 따라 주름과 여백의 깊이가 달라지는 평면 부조 오브제.',
+    fullDescription: '물에 적신 한지를 손으로 조심스럽게 주름잡아 건조시키며 자연스러운 결을 고정했습니다. 자연광의 입사각에 따라 종이 표면에 시시각각 다른 그림자가 맺히며, 침묵 속의 시간성을 표현합니다.',
+    coverImage: 'https://images.unsplash.com/photo-1507643179773-3e975d7acc5d?auto=format&fit=crop&w=1400&q=85', // Minimalist textured paper/surface sculpture
+    detailImage: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=1200&q=85', // Macro paper fiber detail
+    spaceImage: 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=1400&q=85', // Wall installation in gallery
+    craftImage: 'https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=1200&q=85',
+    isFeatured: false,
+    order: 2,
+  },
+  {
+    id: 'work-03',
+    numberCode: '03',
+    title: 'Aura Column No.03',
+    subtitle: 'Vertical Paper Lantern',
+    category: 'LIGHT',
+    year: '2026',
+    materials: 'Hanji / Smoked Bamboo / Steel Base',
+    dimensions: '280 × 280 × 1100 mm',
+    shortDescription: '공간의 한구석을 온화한 비례로 채우는 수직형 한지 스탠드 조명.',
+    fullDescription: '전통 훈연 대나무 기둥과 천연 감즙으로 옅게 염색한 한지의 결합. 공간 바닥에서부터 은은하게 차오르는 빛의 그러데이션은 차분한 안정감을 전합니다.',
+    coverImage: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=1400&q=85', // Serene vertical lantern
+    detailImage: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&q=85',
+    spaceImage: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1400&q=85',
+    craftImage: 'https://images.unsplash.com/photo-1582562124811-c09040d0a901?auto=format&fit=crop&w=1200&q=85',
+    isFeatured: false,
+    order: 3,
+  },
+  {
+    id: 'work-04',
+    numberCode: '04',
+    title: 'Tactile Membrane No.05',
+    subtitle: 'Material Experiment with Pigment',
+    category: 'EXPERIMENTS',
+    year: '2025',
+    materials: 'Layered Hanji / Indigo Natural Pigment / Brass',
+    dimensions: '350 × 350 × 120 mm',
+    shortDescription: '천연 쪽빛 염료가 마르는 동안 한지 표면에 남긴 번짐과 침착의 기록.',
+    fullDescription: '염색되지 않은 백지와 쪽빛 한지를 물 속에서 얽히게 하여 만든 물성 실험작입니다. 종이와 안료의 우연한 만남이 통제되지 않은 아름다운 경계를 만들어냅니다.',
+    coverImage: 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&w=1400&q=85', // Organic subtle tone texture
+    detailImage: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=1200&q=85',
+    spaceImage: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1400&q=85',
+    craftImage: 'https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=1200&q=85',
+    isFeatured: false,
+    order: 4,
+  },
+  {
+    id: 'work-05',
+    numberCode: '05',
+    title: 'Vessel of Silence',
+    subtitle: 'Curved Hanji Vessel Object',
+    category: 'OBJECTS',
+    year: '2026',
+    materials: 'Mulberry Pulp / Natural Lacquer (Ottchil)',
+    dimensions: '310 × 260 × 210 mm',
+    shortDescription: '한지 죽(닥풀)을 빚어 건조한 후 천연 옻칠로 마감한 입체 기형.',
+    fullDescription: '틀 없이 손의 압력과 감각만으로 형태를 빚어내어 모든 면이 비대칭적인 곡선을 이룹니다. 단단하지만 종이 특유의 따뜻하고 묵직한 촉감을 품고 있습니다.',
+    coverImage: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=1400&q=85', // Minimalist sculptural vessel
+    detailImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=85',
+    spaceImage: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1400&q=85',
+    craftImage: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1200&q=85',
+    isFeatured: false,
+    order: 5,
+  },
+  {
+    id: 'work-06',
+    numberCode: '06',
+    title: 'Pendant Luminaire 02',
+    subtitle: 'Suspension Light Structure',
+    category: 'LIGHT',
+    year: '2025',
+    materials: 'Unbleached Hanji / Split Bamboo / Brass Fitting',
+    dimensions: '520 × 520 × 340 mm',
+    shortDescription: '공중에 떠 있는 유기적 종이 구름처럼 공간을 부드럽게 감싸는 펜던트.',
+    fullDescription: '자연스러운 곡률로 휘어진 대나무 뼈대에 섬세하게 찢어 붙인 한지 조각들이 빛을 여러 겹으로 분산시킵니다. 아래에서 올려다볼 때 마치 은은한 달을 품은 듯한 정취를 자아냅니다.',
+    coverImage: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=1400&q=85',
+    detailImage: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=1200&q=85',
+    spaceImage: 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=1400&q=85',
+    craftImage: 'https://images.unsplash.com/photo-1582562124811-c09040d0a901?auto=format&fit=crop&w=1200&q=85',
+    isFeatured: false,
+    order: 6,
+  },
+];
+
+export const PROCESS_STEPS: ProcessStep[] = [
+  {
+    stepNumber: '01',
+    title: 'HANJI',
+    koreanTitle: '한지를 고르고',
+    description: '작품의 성격과 빛의 투과율에 맞는 전통 수제 닥한지를 엄선합니다.',
+    image: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=1000&q=85', // Pure raw paper texture
+  },
+  {
+    stepNumber: '02',
+    title: 'COLOR',
+    koreanTitle: '색을 입히고',
+    description: '천연 광물과 식물성 염료를 사용해 한 장 한 장 손으로 색을 스미게 합니다.',
+    image: 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&w=1000&q=85', // Natural pigment & subtle dye
+  },
+  {
+    stepNumber: '03',
+    title: 'STRUCTURE',
+    koreanTitle: '형태를 만들고',
+    description: '대나무와 나무를 섬세하게 다듬어 한지가 지탱될 유기적 구조를 엮습니다.',
+    image: 'https://images.unsplash.com/photo-1582562124811-c09040d0a901?auto=format&fit=crop&w=1000&q=85', // Wood and bamboo craft
+  },
+  {
+    stepNumber: '04',
+    title: 'FORM',
+    koreanTitle: '완성합니다.',
+    description: '빛과 그림자의 균형을 조율하며 일상에 머무를 온기 있는 오브제로 완성합니다.',
+    image: 'https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?auto=format&fit=crop&w=1000&q=85', // Glowing finished object
+  },
+];
+
+export const INITIAL_SITE_CONTENT: SiteContent = {
+  brandName: 'LEGNA',
+  logoImage: '',
+  logoHeight: 32,
+  heroLogoImage: '',
+  heroMainImage: 'https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?auto=format&fit=crop&w=2000&q=85',
+  heroImageFitMode: 'cover',
+  heroImageAspectRatio: 'wide',
+  heroImagePositionX: 50,
+  heroImagePositionY: 50,
+  heroImageZoom: 100,
+  heroImageBgColor: '#EAE6DC',
+  aboutSectionImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=85',
+  materialSectionImage: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=2000&q=85',
+  artistSectionImage: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1200&q=85',
+  heroHeadline: 'LIGHT & FORM FROM HANJI',
+  heroSubheadline: '',
+  aboutLegnaIntro: 'LEGNA is a craft practice built around Hanji.',
+  aboutLegnaBody: '한 장의 종이가 색을 만나고, 구조를 만나고, 하나의 오브제가 되는 과정을 기록합니다.',
+  materialQuoteEn: 'A material that holds light, color and touch.',
+  materialQuoteKo: '빛과 색, 손의 흔적을 담아내는 종이.',
+  artistIntro: 'LEGNA는 한지의 유연성과 강인함, 그리고 빛을 머금는 특성에 매료되어 시작된 공예 스튜디오입니다. 공장에서 균일하게 찍어낸 물건이 줄 수 없는, 손끝의 압력과 자연의 호흡이 만들어내는 불완전한 완전함을 추구합니다.',
+  philosophyText: '손으로 만들어지는 과정에서 생기는 미세한 차이를 작업의 일부로 받아들이며, 일상 속에 오래 머무를 수 있는 조용한 오브제를 만듭니다.',
+  contactEmail: 'contact@legnacraft.com',
+  instagramHandle: '@legna_hanji',
+  instagramUrl: 'https://instagram.com',
+};
