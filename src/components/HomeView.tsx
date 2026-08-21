@@ -1,6 +1,6 @@
 import React from 'react';
 import { WorkItem, ProcessStep, SiteContent, PageView } from '../types';
-import { ArrowRight, ArrowDown } from 'lucide-react';
+import { ArrowRight, ArrowDown, Mail, Instagram } from 'lucide-react';
 
 interface HomeViewProps {
   works: WorkItem[];
@@ -19,14 +19,38 @@ export const HomeView: React.FC<HomeViewProps> = ({
 }) => {
   // Sort or take works for selected layout
   const sortedWorks = [...works].sort((a, b) => a.order - b.order);
-  const largeWork = sortedWorks[0];
-  const secondaryWorkLeft = sortedWorks[1];
-  const secondaryWorkRight = sortedWorks[2];
-  const tertiaryWork = sortedWorks[3];
+  const featuredWork = sortedWorks.find((w) => w.isFeatured) || sortedWorks[0];
+
+  const getInstagramUrl = () => {
+    if (siteContent.instagramUrl && siteContent.instagramUrl.trim()) {
+      return siteContent.instagramUrl.startsWith('http')
+        ? siteContent.instagramUrl
+        : `https://${siteContent.instagramUrl}`;
+    }
+    if (siteContent.instagramHandle && siteContent.instagramHandle.trim()) {
+      if (siteContent.instagramHandle.startsWith('http')) return siteContent.instagramHandle;
+      const cleanHandle = siteContent.instagramHandle.replace(/^@/, '').trim();
+      return `https://instagram.com/${cleanHandle}`;
+    }
+    return 'https://instagram.com';
+  };
+
+  const getInstagramDisplay = () => {
+    if (!siteContent.instagramHandle || !siteContent.instagramHandle.trim()) return '@legna_hanji';
+    const handle = siteContent.instagramHandle.trim();
+    if (handle.startsWith('http')) {
+      const parts = handle.split('/').filter(Boolean);
+      const last = parts[parts.length - 1] || 'instagram';
+      return `@${last}`;
+    }
+    return handle.startsWith('@') ? handle : `@${handle}`;
+  };
+
+  const email = siteContent.contactEmail || 'contact@legnacraft.com';
+  const instaUrl = getInstagramUrl();
+  const instaDisplay = getInstagramDisplay();
 
   // Featured Project: either marked isFeatured or the primary work
-  const featuredWork = works.find((w) => w.isFeatured) || works[0];
-
   const scrollToWorks = () => {
     const el = document.getElementById('section-selected-works');
     if (el) {
@@ -91,17 +115,25 @@ export const HomeView: React.FC<HomeViewProps> = ({
             const fitMode = siteContent.heroImageFitMode || 'cover';
             const aspectRatio = siteContent.heroImageAspectRatio || 'wide';
             const bgColor = siteContent.heroImageBgColor || '#EAE6DC';
+            const customHeight = siteContent.heroImageHeight;
             const isBlurBg = bgColor === 'blur';
 
-            let aspectClass = 'aspect-[16/9] sm:aspect-[21/9] w-full';
-            if (fitMode === 'natural' || aspectRatio === 'natural') {
-              aspectClass = 'w-full max-h-[82vh] min-h-[300px] flex items-center justify-center';
+            // Default aspect classes: expanded with taller default ratios
+            let aspectClass = 'aspect-[16/10] sm:aspect-[16/9] lg:aspect-[19/9] w-full min-h-[460px] sm:min-h-[560px] lg:min-h-[640px]';
+            if (customHeight && customHeight > 0) {
+              aspectClass = 'w-full';
+            } else if (fitMode === 'natural' || aspectRatio === 'natural') {
+              aspectClass = 'w-full max-h-[88vh] min-h-[400px] flex items-center justify-center';
+            } else if (aspectRatio === 'tall') {
+              aspectClass = 'aspect-[16/11] sm:aspect-[16/10] w-full min-h-[520px] sm:min-h-[680px] lg:min-h-[780px]';
+            } else if (aspectRatio === 'cinematic') {
+              aspectClass = 'aspect-[16/9] sm:aspect-[21/9] w-full min-h-[400px] sm:min-h-[500px]';
             } else if (aspectRatio === 'standard') {
-              aspectClass = 'aspect-[4/3] sm:aspect-[16/10] w-full max-w-5xl mx-auto';
+              aspectClass = 'aspect-[4/3] sm:aspect-[16/10] w-full max-w-5xl mx-auto min-h-[480px]';
             } else if (aspectRatio === 'square') {
-              aspectClass = 'aspect-square w-full max-w-2xl mx-auto';
+              aspectClass = 'aspect-square w-full max-w-3xl mx-auto min-h-[480px]';
             } else if (aspectRatio === 'portrait') {
-              aspectClass = 'aspect-[3/4] sm:aspect-[4/5] w-full max-w-2xl mx-auto';
+              aspectClass = 'aspect-[3/4] sm:aspect-[4/5] w-full max-w-3xl mx-auto min-h-[560px]';
             }
 
             const imgUrl = siteContent.heroMainImage || 'https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?auto=format&fit=crop&w=2000&q=85';
@@ -111,6 +143,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 className={`editorial-img-container ${aspectClass} overflow-hidden border border-[#DEDAD2]/80 relative transition-all duration-300`}
                 style={{
                   backgroundColor: !isBlurBg ? bgColor : undefined,
+                  height: customHeight && customHeight > 0 ? `${customHeight}px` : undefined,
                 }}
               >
                 {/* Optional subtle blurred backdrop for contain mode */}
@@ -128,7 +161,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                     fitMode === 'contain'
                       ? 'object-contain p-2 sm:p-4'
                       : fitMode === 'natural'
-                      ? 'object-contain max-h-[80vh] w-auto h-auto mx-auto'
+                      ? 'object-contain max-h-[85vh] w-auto h-auto mx-auto'
                       : 'object-cover'
                   }`}
                   style={{
@@ -228,7 +261,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
       </section>
 
       {/* ─────────────────────────────────────────────────────────────
-          SECTION 03: ABOUT LEGNA
+          SECTION 03: ABOUT LEGNA & ARTIST
           Left: Short Statement / Right: Work Detail Image
           ───────────────────────────────────────────────────────────── */}
       <section
@@ -239,21 +272,35 @@ export const HomeView: React.FC<HomeViewProps> = ({
           {/* Left Text Column */}
           <div className="lg:col-span-6 space-y-8">
             <span className="text-xs tracking-[0.25em] uppercase text-[#77736B] font-medium block">
-              ABOUT LEGNA
+              ABOUT {siteContent.brandName || 'LEGNA'}
             </span>
             <div className="space-y-6">
               <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-light leading-snug text-[#171717]">
-                LEGNA is a craft practice built around Hanji.
+                {siteContent.aboutLegnaIntro || `${siteContent.brandName || 'LEGNA'} is a craft practice built around Hanji.`}
               </h2>
-              <div className="space-y-4 text-sm sm:text-base text-[#77736B] font-light leading-relaxed">
-                <p>
-                  한 장의 종이가 색을 만나고,
-                  <br />
-                  구조를 만나고,
-                  <br />
-                  하나의 오브제가 되는 과정을 기록합니다.
-                </p>
+              <div className="space-y-4 text-sm sm:text-base text-[#77736B] font-light leading-relaxed whitespace-pre-line">
+                {siteContent.aboutLegnaBody || (
+                  <p>
+                    한 장의 종이가 색을 만나고,
+                    <br />
+                    구조를 만나고,
+                    <br />
+                    하나의 오브제가 되는 과정을 기록합니다.
+                  </p>
+                )}
               </div>
+
+              {/* Artist Statement if provided */}
+              {siteContent.artistIntro && (
+                <div className="p-4 bg-[#EAE6DC]/40 border-l-2 border-[#171717] space-y-1.5 mt-2">
+                  <span className="text-[10px] font-mono tracking-widest text-[#77736B] uppercase block font-semibold">
+                    Artist Statement / 작가 소개
+                  </span>
+                  <p className="text-xs sm:text-sm text-[#171717] font-light leading-relaxed whitespace-pre-line">
+                    {siteContent.artistIntro}
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="pt-2">
@@ -552,21 +599,23 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </button>
           </div>
 
-          <div className="pt-8 text-xs text-[#77736B] font-mono tracking-wider">
+          <div className="pt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-[#77736B] font-mono tracking-wider">
             <a
-              href="https://instagram.com"
+              href={instaUrl}
               target="_blank"
               rel="noreferrer"
-              className="hover:text-[#171717] transition-colors"
+              className="inline-flex items-center gap-1.5 hover:text-[#171717] transition-colors"
             >
-              Instagram
+              <Instagram className="w-3.5 h-3.5" />
+              <span>{instaDisplay}</span>
             </a>
-            <span className="mx-3">•</span>
+            <span className="text-[#DEDAD2]">•</span>
             <a
-              href="mailto:contact@legnacraft.com"
-              className="hover:text-[#171717] transition-colors"
+              href={`mailto:${email}`}
+              className="inline-flex items-center gap-1.5 hover:text-[#171717] transition-colors"
             >
-              Email
+              <Mail className="w-3.5 h-3.5" />
+              <span>{email}</span>
             </a>
           </div>
         </div>

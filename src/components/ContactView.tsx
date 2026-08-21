@@ -206,29 +206,37 @@ export const ContactView: React.FC<ContactViewProps> = ({
       {/* Direct Info Footer */}
       <div className="border-t border-[#DEDAD2] pt-12 grid grid-cols-1 sm:grid-cols-2 gap-8 text-xs text-[#77736B]">
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-[#171717] font-medium">
+          <div className="flex items-center gap-2 text-[#171717] font-medium font-mono">
             <Mail className="w-4 h-4" />
             <span>DIRECT EMAIL</span>
           </div>
           <a
-            href={`mailto:${siteContent.contactEmail}`}
-            className="block text-[#171717] hover:underline"
+            href={`mailto:${siteContent.contactEmail || 'contact@legnacraft.com'}`}
+            className="block text-[#171717] hover:underline font-mono text-sm"
           >
-            {siteContent.contactEmail}
+            {siteContent.contactEmail || 'contact@legnacraft.com'}
           </a>
         </div>
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-[#171717] font-medium">
+          <div className="flex items-center gap-2 text-[#171717] font-medium font-mono">
             <Instagram className="w-4 h-4" />
             <span>INSTAGRAM</span>
           </div>
           <a
-            href={siteContent.instagramUrl}
+            href={
+              siteContent.instagramUrl && siteContent.instagramUrl.trim()
+                ? (siteContent.instagramUrl.startsWith('http') ? siteContent.instagramUrl : `https://${siteContent.instagramUrl}`)
+                : siteContent.instagramHandle
+                ? (siteContent.instagramHandle.startsWith('http') ? siteContent.instagramHandle : `https://instagram.com/${siteContent.instagramHandle.replace(/^@/, '')}`)
+                : 'https://instagram.com'
+            }
             target="_blank"
             rel="noreferrer"
-            className="block text-[#171717] hover:underline"
+            className="block text-[#171717] hover:underline font-mono text-sm"
           >
-            {siteContent.instagramHandle}
+            {siteContent.instagramHandle
+              ? (siteContent.instagramHandle.startsWith('@') ? siteContent.instagramHandle : `@${siteContent.instagramHandle}`)
+              : '@legna_hanji'}
           </a>
         </div>
       </div>

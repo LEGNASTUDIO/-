@@ -22,34 +22,40 @@ export const AboutView: React.FC<AboutViewProps> = ({ siteContent }) => {
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
         <div className="lg:col-span-6 space-y-6">
           <span className="text-[11px] tracking-[0.25em] font-mono uppercase text-[#77736B] block">
-            01 — LEGNA
+            01 — {siteContent.brandName || 'LEGNA'}
           </span>
           <h2 className="font-serif text-3xl sm:text-4xl font-light leading-snug text-[#171717]">
-            Light & Form from Traditional Korean Paper
+            {siteContent.aboutLegnaIntro || 'Light & Form from Traditional Korean Paper'}
           </h2>
-          <div className="space-y-4 text-sm sm:text-base text-[#77736B] font-light leading-relaxed">
-            <p>
-              LEGNA는 한지를 기반으로
-              <br />
-              빛과 형태를 탐구하는 공예 브랜드입니다.
-            </p>
-            <p>
-              손으로 만들어지는 과정에서 생기는
-              <br />
-              미세한 차이를 작업의 일부로 받아들이며,
-            </p>
-            <p>
-              일상 속에 오래 머무를 수 있는
-              <br />
-              조용한 오브제를 만듭니다.
-            </p>
+          <div className="space-y-4 text-sm sm:text-base text-[#77736B] font-light leading-relaxed whitespace-pre-line">
+            {siteContent.aboutLegnaBody ? (
+              <p>{siteContent.aboutLegnaBody}</p>
+            ) : (
+              <>
+                <p>
+                  LEGNA는 한지를 기반으로
+                  <br />
+                  빛과 형태를 탐구하는 공예 브랜드입니다.
+                </p>
+                <p>
+                  손으로 만들어지는 과정에서 생기는
+                  <br />
+                  미세한 차이를 작업의 일부로 받아들이며,
+                </p>
+                <p>
+                  일상 속에 오래 머무를 수 있는
+                  <br />
+                  조용한 오브제를 만듭니다.
+                </p>
+              </>
+            )}
           </div>
         </div>
         <div className="lg:col-span-6">
           <div className="editorial-img-container aspect-[4/3] bg-[#EAE6DC] border border-[#DEDAD2]/80">
             <img
               src={siteContent.aboutSectionImage || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=85'}
-              alt="LEGNA Studio"
+              alt={`${siteContent.brandName || 'LEGNA'} Studio`}
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
             />
@@ -76,9 +82,9 @@ export const AboutView: React.FC<AboutViewProps> = ({ siteContent }) => {
           <h2 className="font-serif text-3xl sm:text-4xl font-light leading-snug text-[#171717]">
             Hands, Material, and Quiet Breath
           </h2>
-          <div className="space-y-4 text-sm sm:text-base text-[#77736B] font-light leading-relaxed">
-            <p>
-              {siteContent.artistIntro}
+          <div className="space-y-4 text-sm sm:text-base text-[#77736B] font-light leading-relaxed whitespace-pre-line">
+            <p className="text-[#171717] font-normal leading-relaxed">
+              {siteContent.artistIntro || '한지를 다루며 종이와 빛이 만드는 결을 기록합니다.'}
             </p>
             <p>
               한지 장인이 떠낸 닥나무 종이를 마주할 때, 종이 한 장에 깃든 햇살과 바람, 물의 시간을 먼저 읽어냅니다.
@@ -96,11 +102,11 @@ export const AboutView: React.FC<AboutViewProps> = ({ siteContent }) => {
         <h2 className="font-serif text-3xl sm:text-4xl font-light leading-snug text-[#171717]">
           “시간이 지날수록 깊어지는 조용한 빛”
         </h2>
-        <p className="text-sm sm:text-base text-[#77736B] font-light leading-relaxed">
+        <p className="text-sm sm:text-base text-[#77736B] font-light leading-relaxed whitespace-pre-line">
           {siteContent.philosophyText}
         </p>
-        <p className="text-xs sm:text-sm text-[#9E9A91] italic font-serif pt-4">
-          — LEGNA Studio, Seoul
+        <p className="text-xs sm:text-sm text-[#9E9A91] italic font-serif pt-4 font-mono">
+          — {siteContent.brandName || 'LEGNA'} Studio, Seoul
         </p>
       </section>
     </div>

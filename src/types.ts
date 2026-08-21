@@ -35,7 +35,8 @@ export interface SiteContent {
   heroLogoImage?: string; // Optional custom larger logo image for Hero section
   heroMainImage?: string; // Main hero ambient visual image on the home page
   heroImageFitMode?: 'cover' | 'contain' | 'natural'; // 'cover' (fill/crop), 'contain' (full artwork without cropping), 'natural' (original ratio)
-  heroImageAspectRatio?: 'wide' | 'standard' | 'portrait' | 'square' | 'natural'; // aspect ratio presets
+  heroImageAspectRatio?: 'tall' | 'cinematic' | 'standard' | 'portrait' | 'square' | 'natural' | 'wide'; // aspect ratio presets
+  heroImageHeight?: number; // Custom height in pixels (e.g. 400 ~ 950px, default undefined uses aspect ratio)
   heroImagePositionX?: number; // 0 to 100 percentage (default 50)
   heroImagePositionY?: number; // 0 to 100 percentage (default 50)
   heroImageZoom?: number; // 50 to 200 percentage (default 100)

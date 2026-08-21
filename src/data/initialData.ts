@@ -149,7 +149,7 @@ export const INITIAL_SITE_CONTENT: SiteContent = {
   heroLogoImage: '',
   heroMainImage: 'https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?auto=format&fit=crop&w=2000&q=85',
   heroImageFitMode: 'cover',
-  heroImageAspectRatio: 'wide',
+  heroImageAspectRatio: 'tall',
   heroImagePositionX: 50,
   heroImagePositionY: 50,
   heroImageZoom: 100,

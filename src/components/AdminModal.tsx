@@ -32,6 +32,12 @@ import {
   Minimize2,
   Palette,
   Layout,
+  Copy,
+  Download,
+  RefreshCw,
+  FileJson,
+  Share2,
+  Mail,
 } from 'lucide-react';
 
 interface AdminModalProps {
@@ -68,7 +74,12 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   const [passwordError, setPasswordError] = useState(false);
 
   // Tab state
-  const [activeTab, setActiveTab] = useState<'WORKS' | 'HERO_PHOTO' | 'LOGO_BRAND' | 'SITE_TEXT' | 'PROCESS' | 'INQUIRIES'>('WORKS');
+  const [activeTab, setActiveTab] = useState<'WORKS' | 'HERO_PHOTO' | 'LOGO_BRAND' | 'SITE_TEXT' | 'PROCESS' | 'INQUIRIES' | 'BACKUP_SYNC'>('WORKS');
+
+  // Backup & Sync States
+  const [importJsonInput, setImportJsonInput] = useState('');
+  const [jsonFileError, setJsonFileError] = useState<string | null>(null);
+  const jsonFileInputRef = useRef<HTMLInputElement>(null);
 
   // Work Editor State
   const [editingWork, setEditingWork] = useState<WorkItem | null>(null);
@@ -575,6 +586,114 @@ export const AdminModal: React.FC<AdminModalProps> = ({
     }
   };
 
+  // ──────── BACKUP & SYNC HANDLERS ────────
+  const getFullExportPayload = () => {
+    return {
+      appName: 'LEGNA Studio Portfolio',
+      version: '2.0',
+      exportedAt: new Date().toISOString(),
+      works: localWorks,
+      siteContent: localContent,
+      processSteps: localSteps,
+    };
+  };
+
+  const handleExportCopyAll = async () => {
+    try {
+      const payload = getFullExportPayload();
+      const jsonString = JSON.stringify(payload, null, 2);
+      await navigator.clipboard.writeText(jsonString);
+      showToast('전체 포트폴리오 데이터(JSON)가 클립보드에 복사되었습니다!');
+    } catch (err) {
+      console.error('Failed to copy to clipboard', err);
+      showToast('클립보드 복사에 실패했습니다. 파일 다운로드를 이용해 주세요.');
+    }
+  };
+
+  const handleExportDownloadFile = () => {
+    try {
+      const payload = getFullExportPayload();
+      const jsonString = JSON.stringify(payload, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `legna-craft-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      showToast('백업 파일(JSON)이 다운로드되었습니다.');
+    } catch (err) {
+      console.error('Failed to download backup file', err);
+      showToast('파일 다운로드 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleApplyImportJson = (customText?: string) => {
+    const rawText = customText !== undefined ? customText : importJsonInput;
+    setJsonFileError(null);
+
+    if (!rawText.trim()) {
+      setJsonFileError('적용할 JSON 데이터를 입력하거나 파일을 선택해 주세요.');
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(rawText);
+      let newWorks = localWorks;
+      let newContent = localContent;
+      let newSteps = localSteps;
+
+      if (parsed.works && Array.isArray(parsed.works)) {
+        newWorks = parsed.works;
+      } else if (Array.isArray(parsed)) {
+        newWorks = parsed;
+      }
+
+      if (parsed.siteContent && typeof parsed.siteContent === 'object') {
+        newContent = { ...localContent, ...parsed.siteContent };
+      }
+
+      if (parsed.processSteps && Array.isArray(parsed.processSteps)) {
+        newSteps = parsed.processSteps;
+      }
+
+      setLocalWorks(newWorks);
+      setLocalContent(newContent);
+      setLocalSteps(newSteps);
+
+      onSaveWorks(newWorks);
+      onSaveSiteContent(newContent);
+      onSaveProcessSteps(newSteps);
+
+      setImportJsonInput('');
+      showToast('모든 수정된 사진과 설정이 성공적으로 적용되었습니다!');
+    } catch (err: any) {
+      console.error('Failed to parse JSON', err);
+      setJsonFileError(`올바르지 않은 JSON 데이터입니다: ${err.message || '파싱 오류'}`);
+    }
+  };
+
+  const handleImportFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      if (content) {
+        setImportJsonInput(content);
+        handleApplyImportJson(content);
+      }
+    };
+    reader.onerror = () => {
+      setJsonFileError('파일을 읽는 중 오류가 발생했습니다.');
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
   const handleResetAll = () => {
     if (
       window.confirm(
@@ -798,6 +917,21 @@ export const AdminModal: React.FC<AdminModalProps> = ({
             >
               <MessageSquare className="w-3.5 h-3.5" />
               <span>INQUIRIES ({inquiries.length})</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab('BACKUP_SYNC');
+                setEditingWork(null);
+              }}
+              className={`py-3 flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${
+                activeTab === 'BACKUP_SYNC'
+                  ? 'border-[#171717] text-[#171717] font-semibold'
+                  : 'border-transparent text-amber-800 hover:text-[#171717]'
+              }`}
+            >
+              <Share2 className="w-3.5 h-3.5 text-amber-700" />
+              <span className="font-semibold text-amber-900">데이터 동기화 & 백업 (SYNC & BACKUP)</span>
             </button>
           </div>
 
@@ -1646,12 +1780,13 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                     <div className="p-3.5 border border-[#DEDAD2] bg-[#EAE6DC]/30 space-y-2">
                       <span className="text-[11px] font-mono font-bold text-[#171717] flex items-center gap-1.5 uppercase">
                         <Layout className="w-3.5 h-3.5 text-amber-800" />
-                        <span>프레임 화면 비율 (Aspect Ratio)</span>
+                        <span>프레임 화면 비율 & 높이 (Aspect Ratio & Height)</span>
                       </span>
-                      <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
+                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
                         {[
-                          { id: 'wide', label: '와이드 21:9' },
+                          { id: 'tall', label: '★ 대형 확장 (Tall)' },
                           { id: 'standard', label: '표준 16:10' },
+                          { id: 'cinematic', label: '시네마틱 21:9' },
                           { id: 'square', label: '정사각 1:1' },
                           { id: 'portrait', label: '세로형 4:5' },
                           { id: 'natural', label: '원본비율' },
@@ -1663,10 +1798,11 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                               setLocalContent({
                                 ...localContent,
                                 heroImageAspectRatio: ratio.id as any,
+                                heroImageHeight: undefined,
                               })
                             }
                             className={`py-1.5 px-1 text-[10px] font-mono border transition-all text-center ${
-                              (localContent.heroImageAspectRatio || 'wide') === ratio.id
+                              (localContent.heroImageAspectRatio || 'tall') === ratio.id && !localContent.heroImageHeight
                                 ? 'border-[#171717] bg-[#171717] text-[#F7F5F0] font-bold'
                                 : 'border-[#DEDAD2] bg-[#F7F5F0] text-[#171717] hover:border-[#171717]'
                             }`}
@@ -1674,6 +1810,46 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                             {ratio.label}
                           </button>
                         ))}
+                      </div>
+
+                      {/* Custom Pixel Height Slider */}
+                      <div className="pt-2 border-t border-[#DEDAD2]/80 space-y-1.5">
+                        <div className="flex items-center justify-between text-[10px] font-mono">
+                          <span className="text-[#171717] font-semibold">높이(Height) 픽셀 단위 직접 조절:</span>
+                          <span className="text-amber-800 font-bold">
+                            {localContent.heroImageHeight ? `${localContent.heroImageHeight}px` : '비율 자동 맞춤'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="range"
+                            min="400"
+                            max="950"
+                            step="20"
+                            value={localContent.heroImageHeight || 650}
+                            onChange={(e) =>
+                              setLocalContent({
+                                ...localContent,
+                                heroImageHeight: parseInt(e.target.value, 10),
+                              })
+                            }
+                            className="w-full accent-[#171717] cursor-pointer h-1.5 bg-[#DEDAD2] rounded-lg"
+                          />
+                          {localContent.heroImageHeight && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setLocalContent({
+                                  ...localContent,
+                                  heroImageHeight: undefined,
+                                })
+                              }
+                              className="text-[9px] font-mono text-[#77736B] hover:text-[#171717] underline whitespace-nowrap"
+                            >
+                              자동 비율로 전환
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -1737,7 +1913,19 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                       ref={heroPreviewContainerRef}
                       onMouseDown={handleHeroMouseDown}
                       onTouchStart={handleHeroTouchStart}
-                      className={`aspect-[16/9] sm:aspect-[21/9] w-full border-2 ${
+                      className={`${
+                        (localContent.heroImageAspectRatio || 'tall') === 'tall'
+                          ? 'aspect-[16/11] sm:aspect-[16/10]'
+                          : (localContent.heroImageAspectRatio || 'tall') === 'cinematic'
+                          ? 'aspect-[16/9] sm:aspect-[21/9]'
+                          : (localContent.heroImageAspectRatio || 'tall') === 'standard'
+                          ? 'aspect-[4/3] sm:aspect-[16/10]'
+                          : (localContent.heroImageAspectRatio || 'tall') === 'square'
+                          ? 'aspect-square max-w-sm mx-auto'
+                          : (localContent.heroImageAspectRatio || 'tall') === 'portrait'
+                          ? 'aspect-[3/4] max-w-xs mx-auto'
+                          : 'aspect-[16/10]'
+                      } w-full border-2 ${
                         isDraggingHero ? 'border-amber-700 cursor-grabbing' : 'border-[#171717]/40 cursor-grab hover:border-[#171717]'
                       } overflow-hidden relative shadow-inner select-none transition-all group`}
                       style={{
@@ -2458,157 +2646,239 @@ export const AdminModal: React.FC<AdminModalProps> = ({
               <form onSubmit={handleSaveSiteTexts} className="space-y-6">
                 <div className="flex items-center justify-between pb-4 border-b border-[#DEDAD2]">
                   <div>
-                    <h3 className="font-serif text-xl font-light">브랜드 문구 및 소개 설정</h3>
+                    <h3 className="font-serif text-xl font-light">브랜드 문구 및 작가 소개 / 연락처 설정</h3>
                     <p className="text-xs text-[#77736B]">
-                      홈, 어바웃, 머티리얼 섹션의 주요 문구를 수정합니다.
+                      홈, 어바웃, 하단 푸터(Footer), 문의 페이지에 실시간 반영됩니다.
                     </p>
                   </div>
                   <button
                     type="submit"
-                    className="px-6 py-2 bg-[#171717] text-[#F7F5F0] text-xs font-mono hover:bg-[#333333]"
+                    className="px-6 py-2 bg-[#171717] text-[#F7F5F0] text-xs font-mono hover:bg-[#333333] transition-colors"
                   >
                     문구 저장
                   </button>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-mono text-[#77736B] uppercase">
-                      HERO 소제목 (HOME HERO SUBTITLE)
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={localContent.heroSubheadline}
-                      onChange={(e) =>
-                        setLocalContent({
-                          ...localContent,
-                          heroSubheadline: e.target.value,
-                        })
-                      }
-                      className="w-full bg-[#EAE6DC]/30 border border-[#DEDAD2] p-2.5 text-xs text-[#171717]"
-                    />
-                  </div>
+                {/* Info Card */}
+                <div className="p-4 bg-[#EAE6DC]/30 border border-[#DEDAD2] text-xs text-[#77736B] space-y-1 font-mono">
+                  <p className="font-semibold text-[#171717]">📍 입력하신 정보가 표시되는 위치:</p>
+                  <p>• <strong>대표 이메일 & 인스타그램</strong>: 홈페이지 맨 하단, 전 페이지 푸터(Footer), Contact 문의 페이지</p>
+                  <p>• <strong>작가 소개</strong>: 홈 화면 ABOUT 섹션, 어바웃 페이지, 푸터 하단</p>
+                  <p>• <strong>ABOUT 소개 본문</strong>: 홈 화면과 어바웃(ABOUT) 페이지 본문</p>
+                </div>
 
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-mono text-[#77736B] uppercase">
-                      ABOUT LEGNA 소개 본문
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={localContent.aboutLegnaBody}
-                      onChange={(e) =>
-                        setLocalContent({
-                          ...localContent,
-                          aboutLegnaBody: e.target.value,
-                        })
-                      }
-                      className="w-full bg-[#EAE6DC]/30 border border-[#DEDAD2] p-2.5 text-xs text-[#171717]"
-                    />
-                  </div>
+                <div className="space-y-6">
+                  {/* Contact Info Group */}
+                  <div className="p-5 border border-[#DEDAD2] bg-[#F7F5F0] space-y-4">
+                    <h4 className="font-mono text-xs font-bold text-[#171717] uppercase flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-[#77736B]" />
+                      <span>연락처 및 소셜 계정 (홈페이지 하단 & 푸터 & CONTACT 연동)</span>
+                    </h4>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-mono text-[#77736B] uppercase flex items-center justify-between">
+                          <span>대표 이메일 (CONTACT EMAIL)</span>
+                          <span className="text-[10px] text-amber-800">★ 푸터/하단 표시</span>
+                        </label>
+                        <input
+                          type="email"
+                          value={localContent.contactEmail}
+                          onChange={(e) =>
+                            setLocalContent({
+                              ...localContent,
+                              contactEmail: e.target.value,
+                            })
+                          }
+                          placeholder="contact@example.com"
+                          className="w-full bg-[#EAE6DC]/30 border border-[#DEDAD2] p-2.5 text-xs text-[#171717] font-mono focus:border-[#171717] outline-none"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-mono text-[#77736B] uppercase flex items-center justify-between">
+                          <span>인스타그램 계정 / 아이디</span>
+                          <span className="text-[10px] text-amber-800">★ 푸터/하단 표시</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={localContent.instagramHandle}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            const url = val.startsWith('http')
+                              ? val
+                              : `https://instagram.com/${val.replace(/^@/, '').trim()}`;
+                            setLocalContent({
+                              ...localContent,
+                              instagramHandle: val,
+                              instagramUrl: url,
+                            });
+                          }}
+                          placeholder="@my_studio_id 또는 my_studio_id"
+                          className="w-full bg-[#EAE6DC]/30 border border-[#DEDAD2] p-2.5 text-xs text-[#171717] font-mono focus:border-[#171717] outline-none"
+                        />
+                      </div>
+                    </div>
+
                     <div className="space-y-1">
                       <label className="text-[11px] font-mono text-[#77736B] uppercase">
-                        MATERIAL 인용문 (ENG)
+                        인스타그램 직접 링크 URL (선택)
                       </label>
                       <input
-                        type="text"
-                        value={localContent.materialQuoteEn}
+                        type="url"
+                        value={localContent.instagramUrl || ''}
                         onChange={(e) =>
                           setLocalContent({
                             ...localContent,
-                            materialQuoteEn: e.target.value,
+                            instagramUrl: e.target.value,
                           })
                         }
-                        className="w-full bg-[#EAE6DC]/30 border border-[#DEDAD2] p-2.5 text-xs text-[#171717]"
+                        placeholder="https://instagram.com/my_studio_id"
+                        className="w-full bg-[#EAE6DC]/30 border border-[#DEDAD2] p-2 text-xs text-[#171717] font-mono focus:border-[#171717] outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Artist Statement Group */}
+                  <div className="p-5 border border-[#DEDAD2] bg-[#F7F5F0] space-y-4">
+                    <h4 className="font-mono text-xs font-bold text-[#171717] uppercase flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-[#77736B]" />
+                      <span>작가 소개 및 작업 철학 (ARTIST STATEMENT)</span>
+                    </h4>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-mono text-[#77736B] uppercase flex items-center justify-between">
+                        <span>작가 소개 (ARTIST STATEMENT)</span>
+                        <span className="text-[10px] text-amber-800">★ 메인 홈 & 어바웃 & 푸터 연동</span>
+                      </label>
+                      <textarea
+                        rows={4}
+                        value={localContent.artistIntro}
+                        onChange={(e) =>
+                          setLocalContent({
+                            ...localContent,
+                            artistIntro: e.target.value,
+                          })
+                        }
+                        placeholder="작가로서의 철학과 한지를 다루는 태도, 작업에 대한 소개를 작성해 주세요."
+                        className="w-full bg-[#EAE6DC]/30 border border-[#DEDAD2] p-2.5 text-xs text-[#171717] focus:border-[#171717] outline-none leading-relaxed"
                       />
                     </div>
 
                     <div className="space-y-1">
                       <label className="text-[11px] font-mono text-[#77736B] uppercase">
-                        MATERIAL 인용문 (KOR)
+                        작업 철학 (PHILOSOPHY)
                       </label>
-                      <input
-                        type="text"
-                        value={localContent.materialQuoteKo}
+                      <textarea
+                        rows={3}
+                        value={localContent.philosophyText}
                         onChange={(e) =>
                           setLocalContent({
                             ...localContent,
-                            materialQuoteKo: e.target.value,
+                            philosophyText: e.target.value,
                           })
                         }
-                        className="w-full bg-[#EAE6DC]/30 border border-[#DEDAD2] p-2.5 text-xs text-[#171717]"
+                        placeholder="시간이 지날수록 깊어지는 작업 철학 문구"
+                        className="w-full bg-[#EAE6DC]/30 border border-[#DEDAD2] p-2.5 text-xs text-[#171717] focus:border-[#171717] outline-none leading-relaxed"
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-mono text-[#77736B] uppercase">
-                      작가 소개 (ARTIST STATEMENT)
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={localContent.artistIntro}
-                      onChange={(e) =>
-                        setLocalContent({
-                          ...localContent,
-                          artistIntro: e.target.value,
-                        })
-                      }
-                      className="w-full bg-[#EAE6DC]/30 border border-[#DEDAD2] p-2.5 text-xs text-[#171717]"
-                    />
-                  </div>
+                  {/* Brand Story Group */}
+                  <div className="p-5 border border-[#DEDAD2] bg-[#F7F5F0] space-y-4">
+                    <h4 className="font-mono text-xs font-bold text-[#171717] uppercase flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-[#77736B]" />
+                      <span>브랜드 소개 및 홈 문구</span>
+                    </h4>
 
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-mono text-[#77736B] uppercase">
-                      작업 철학 (PHILOSOPHY)
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={localContent.philosophyText}
-                      onChange={(e) =>
-                        setLocalContent({
-                          ...localContent,
-                          philosophyText: e.target.value,
-                        })
-                      }
-                      className="w-full bg-[#EAE6DC]/30 border border-[#DEDAD2] p-2.5 text-xs text-[#171717]"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                     <div className="space-y-1">
                       <label className="text-[11px] font-mono text-[#77736B] uppercase">
-                        대표 이메일
+                        HERO 소제목 (메인 첫 화면 타이틀 아래 문구)
                       </label>
-                      <input
-                        type="email"
-                        value={localContent.contactEmail}
+                      <textarea
+                        rows={2}
+                        value={localContent.heroSubheadline}
                         onChange={(e) =>
                           setLocalContent({
                             ...localContent,
-                            contactEmail: e.target.value,
+                            heroSubheadline: e.target.value,
                           })
                         }
-                        className="w-full bg-[#EAE6DC]/30 border border-[#DEDAD2] p-2.5 text-xs text-[#171717]"
+                        placeholder="한지와 빛이 만드는 고요한 오브제를 탐구합니다."
+                        className="w-full bg-[#EAE6DC]/30 border border-[#DEDAD2] p-2.5 text-xs text-[#171717] focus:border-[#171717] outline-none"
                       />
                     </div>
 
                     <div className="space-y-1">
                       <label className="text-[11px] font-mono text-[#77736B] uppercase">
-                        인스타그램 계정
+                        ABOUT 섹션 타이틀 / 헤드라인
                       </label>
                       <input
                         type="text"
-                        value={localContent.instagramHandle}
+                        value={localContent.aboutLegnaIntro}
                         onChange={(e) =>
                           setLocalContent({
                             ...localContent,
-                            instagramHandle: e.target.value,
+                            aboutLegnaIntro: e.target.value,
                           })
                         }
-                        className="w-full bg-[#EAE6DC]/30 border border-[#DEDAD2] p-2.5 text-xs text-[#171717]"
+                        placeholder="LEGNA is a craft practice built around Hanji."
+                        className="w-full bg-[#EAE6DC]/30 border border-[#DEDAD2] p-2.5 text-xs text-[#171717] focus:border-[#171717] outline-none"
                       />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-mono text-[#77736B] uppercase">
+                        ABOUT 소개 본문 (홈 & 어바웃 페이지)
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={localContent.aboutLegnaBody}
+                        onChange={(e) =>
+                          setLocalContent({
+                            ...localContent,
+                            aboutLegnaBody: e.target.value,
+                          })
+                        }
+                        placeholder="한 장의 종이가 색을 만나고 구조를 만나는 과정..."
+                        className="w-full bg-[#EAE6DC]/30 border border-[#DEDAD2] p-2.5 text-xs text-[#171717] focus:border-[#171717] outline-none leading-relaxed"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-mono text-[#77736B] uppercase">
+                          MATERIAL 인용문 (ENG)
+                        </label>
+                        <input
+                          type="text"
+                          value={localContent.materialQuoteEn}
+                          onChange={(e) =>
+                            setLocalContent({
+                              ...localContent,
+                              materialQuoteEn: e.target.value,
+                            })
+                          }
+                          className="w-full bg-[#EAE6DC]/30 border border-[#DEDAD2] p-2.5 text-xs text-[#171717] focus:border-[#171717] outline-none"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-mono text-[#77736B] uppercase">
+                          MATERIAL 인용문 (KOR)
+                        </label>
+                        <input
+                          type="text"
+                          value={localContent.materialQuoteKo}
+                          onChange={(e) =>
+                            setLocalContent({
+                              ...localContent,
+                              materialQuoteKo: e.target.value,
+                            })
+                          }
+                          className="w-full bg-[#EAE6DC]/30 border border-[#DEDAD2] p-2.5 text-xs text-[#171717] focus:border-[#171717] outline-none"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -2747,6 +3017,164 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* ──────── TAB 5: BACKUP & SYNC (데이터 동기화 및 백업) ──────── */}
+            {activeTab === 'BACKUP_SYNC' && (
+              <div className="space-y-8">
+                <div className="pb-4 border-b border-[#DEDAD2]">
+                  <h3 className="font-serif text-xl font-light text-[#171717]">
+                    데이터 동기화 & 백업 (SYNC & BACKUP)
+                  </h3>
+                  <p className="text-xs text-[#77736B] mt-1">
+                    미리보기에서 수정한 사진과 작품, 사이트 설정을 배포 사이트에 1초 만에 동기화하거나 파일로 안전하게 백업합니다.
+                  </p>
+                </div>
+
+                {/* Deploy Sync Guide Banner */}
+                <div className="p-5 border border-amber-300 bg-amber-50/70 rounded space-y-3">
+                  <div className="flex items-center gap-2 text-amber-900 font-medium text-xs font-mono">
+                    <Share2 className="w-4 h-4 text-amber-700" />
+                    <span>배포된 사이트에 수정한 사진을 동일하게 적용하는 3단계 가이드</span>
+                  </div>
+                  <div className="text-xs text-amber-950/80 space-y-1.5 leading-relaxed font-sans pl-1">
+                    <p>
+                      <strong className="text-amber-950 font-semibold">1단계:</strong> 현재 미리보기 화면에서 아래의 <span className="bg-amber-200/80 px-1.5 py-0.5 rounded font-mono font-medium">[전체 데이터 클립보드 복사]</span> 버튼을 클릭합니다.
+                    </p>
+                    <p>
+                      <strong className="text-amber-950 font-semibold">2단계:</strong> 배포된 웹사이트 주소(<code className="bg-white/80 px-1.5 py-0.5 border border-amber-200 text-amber-900 font-mono">legna-hanji-craft-light-objects.ai.studio</code>)에 접속하여 <strong>ADMIN</strong>(비밀번호: <code>1111</code>)을 엽니다.
+                    </p>
+                    <p>
+                      <strong className="text-amber-950 font-semibold">3단계:</strong> [데이터 동기화 & 백업] 탭에 들어와 아래 입력창에 붙여넣기 후 <span className="bg-amber-200/80 px-1.5 py-0.5 rounded font-mono font-medium">[데이터 불러오기 및 적용]</span>을 누르면 모든 사진과 문구가 즉시 반영됩니다!
+                    </p>
+                  </div>
+                </div>
+
+                {/* Section 1: Export Data */}
+                <div className="p-6 border border-[#DEDAD2] bg-[#EAE6DC]/30 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-sm font-medium text-[#171717] font-mono uppercase tracking-wider flex items-center gap-2">
+                        <Download className="w-4 h-4 text-[#171717]" />
+                        <span>1. 현재 데이터 내보내기 (EXPORT)</span>
+                      </h4>
+                      <p className="text-xs text-[#77736B] mt-0.5">
+                        수정한 모든 작품({localWorks.length}개), 히어로 사진, 로고, 문구를 포함한 전체 설정입니다.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={handleExportCopyAll}
+                      className="px-5 py-3 bg-[#171717] text-[#F7F5F0] text-xs font-mono tracking-wider hover:bg-[#333333] transition-colors flex items-center gap-2"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>전체 데이터 클립보드 복사 (COPY JSON)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleExportDownloadFile}
+                      className="px-5 py-3 bg-[#F7F5F0] border border-[#DEDAD2] text-[#171717] text-xs font-mono tracking-wider hover:bg-[#EAE6DC] transition-colors flex items-center gap-2"
+                    >
+                      <FileJson className="w-3.5 h-3.5 text-[#77736B]" />
+                      <span>백업 파일로 다운로드 (.json)</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Section 2: Import Data */}
+                <div className="p-6 border border-[#DEDAD2] bg-[#EAE6DC]/30 space-y-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-[#171717] font-mono uppercase tracking-wider flex items-center gap-2">
+                      <Upload className="w-4 h-4 text-[#171717]" />
+                      <span>2. 데이터 불러오기 및 적용 (IMPORT)</span>
+                    </h4>
+                    <p className="text-xs text-[#77736B] mt-0.5">
+                      복사한 JSON 텍스트를 붙여넣거나 백업한 .json 파일을 선택하여 현재 사이트에 즉시 덮어씌웁니다.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3 pt-1">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="file"
+                        ref={jsonFileInputRef}
+                        accept=".json,application/json"
+                        onChange={handleImportFileChange}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => jsonFileInputRef.current?.click()}
+                        className="px-4 py-2 border border-[#DEDAD2] bg-[#F7F5F0] text-xs font-mono text-[#171717] hover:bg-[#EAE6DC] transition-colors flex items-center gap-2"
+                      >
+                        <FileJson className="w-3.5 h-3.5 text-[#77736B]" />
+                        <span>내 컴퓨터에서 .json 파일 선택</span>
+                      </button>
+                      <span className="text-xs text-[#77736B] font-mono">또는 아래에 텍스트 직접 붙여넣기:</span>
+                    </div>
+
+                    <textarea
+                      rows={5}
+                      value={importJsonInput}
+                      onChange={(e) => {
+                        setImportJsonInput(e.target.value);
+                        setJsonFileError(null);
+                      }}
+                      placeholder='여기에 복사한 JSON 코드를 붙여넣으세요 (예: {"appName": "LEGNA", "works": [...], ...})'
+                      className="w-full bg-[#F7F5F0] border border-[#DEDAD2] p-3 text-xs font-mono text-[#171717] outline-none focus:border-[#171717] transition-colors resize-y placeholder:text-[#9E9A91]"
+                    />
+
+                    {jsonFileError && (
+                      <p className="text-xs text-red-600 font-mono bg-red-50 p-2 border border-red-200">
+                        {jsonFileError}
+                      </p>
+                    )}
+
+                    <div className="flex justify-end pt-1">
+                      <button
+                        type="button"
+                        onClick={() => handleApplyImportJson()}
+                        disabled={!importJsonInput.trim()}
+                        className="px-6 py-3 bg-[#171717] text-[#F7F5F0] text-xs font-mono tracking-wider hover:bg-[#333333] disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                      >
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>데이터 불러오기 및 즉시 적용</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 3: Summary of Current Data */}
+                <div className="p-5 border border-[#DEDAD2] bg-[#F7F5F0] space-y-2 text-xs font-mono">
+                  <span className="text-[11px] text-[#77736B] uppercase tracking-wider block font-semibold">
+                    현재 로컬에 저장된 상태 요약
+                  </span>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-[#171717]">
+                    <div className="p-3 bg-[#EAE6DC]/40 border border-[#DEDAD2]">
+                      <span className="text-[#77736B] block text-[10px]">등록 작품 수</span>
+                      <span className="text-base font-semibold">{localWorks.length}개</span>
+                    </div>
+                    <div className="p-3 bg-[#EAE6DC]/40 border border-[#DEDAD2]">
+                      <span className="text-[#77736B] block text-[10px]">공정 단계 수</span>
+                      <span className="text-base font-semibold">{localSteps.length}개</span>
+                    </div>
+                    <div className="p-3 bg-[#EAE6DC]/40 border border-[#DEDAD2]">
+                      <span className="text-[#77736B] block text-[10px]">로고 모드</span>
+                      <span className="text-sm font-medium truncate">
+                        {localContent.logoImage ? '이미지 로고' : '텍스트(LEGNA)'}
+                      </span>
+                    </div>
+                    <div className="p-3 bg-[#EAE6DC]/40 border border-[#DEDAD2]">
+                      <span className="text-[#77736B] block text-[10px]">메인 사진 비율</span>
+                      <span className="text-sm font-medium uppercase">{localContent.heroImageAspectRatio}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
