@@ -9,11 +9,16 @@ const STORAGE_KEYS = {
 
 export function getStoredWorks(): WorkItem[] {
   try {
-    const data = localStorage.getItem(STORAGE_KEYS.WORKS);
-    if (data) {
-      const parsed = JSON.parse(data);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const data = window.localStorage.getItem(STORAGE_KEYS.WORKS);
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((item, idx) => ({
+            ...(INITIAL_WORKS[idx % INITIAL_WORKS.length] || INITIAL_WORKS[0]),
+            ...item,
+          }));
+        }
       }
     }
   } catch (err) {
@@ -24,7 +29,9 @@ export function getStoredWorks(): WorkItem[] {
 
 export function saveStoredWorks(works: WorkItem[]): void {
   try {
-    localStorage.setItem(STORAGE_KEYS.WORKS, JSON.stringify(works));
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(STORAGE_KEYS.WORKS, JSON.stringify(works));
+    }
   } catch (err) {
     console.error('Failed to save works to localStorage', err);
   }
@@ -32,9 +39,14 @@ export function saveStoredWorks(works: WorkItem[]): void {
 
 export function getStoredSiteContent(): SiteContent {
   try {
-    const data = localStorage.getItem(STORAGE_KEYS.SITE_CONTENT);
-    if (data) {
-      return { ...INITIAL_SITE_CONTENT, ...JSON.parse(data) };
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const data = window.localStorage.getItem(STORAGE_KEYS.SITE_CONTENT);
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (parsed && typeof parsed === 'object') {
+          return { ...INITIAL_SITE_CONTENT, ...parsed };
+        }
+      }
     }
   } catch (err) {
     console.warn('Failed to load site content from localStorage', err);
@@ -44,7 +56,9 @@ export function getStoredSiteContent(): SiteContent {
 
 export function saveStoredSiteContent(content: SiteContent): void {
   try {
-    localStorage.setItem(STORAGE_KEYS.SITE_CONTENT, JSON.stringify(content));
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(STORAGE_KEYS.SITE_CONTENT, JSON.stringify(content));
+    }
   } catch (err) {
     console.error('Failed to save site content to localStorage', err);
   }
@@ -52,11 +66,16 @@ export function saveStoredSiteContent(content: SiteContent): void {
 
 export function getStoredProcessSteps(): ProcessStep[] {
   try {
-    const data = localStorage.getItem(STORAGE_KEYS.PROCESS_STEPS);
-    if (data) {
-      const parsed = JSON.parse(data);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const data = window.localStorage.getItem(STORAGE_KEYS.PROCESS_STEPS);
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((item, idx) => ({
+            ...(PROCESS_STEPS[idx % PROCESS_STEPS.length] || PROCESS_STEPS[0]),
+            ...item,
+          }));
+        }
       }
     }
   } catch (err) {
@@ -67,16 +86,24 @@ export function getStoredProcessSteps(): ProcessStep[] {
 
 export function saveStoredProcessSteps(steps: ProcessStep[]): void {
   try {
-    localStorage.setItem(STORAGE_KEYS.PROCESS_STEPS, JSON.stringify(steps));
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(STORAGE_KEYS.PROCESS_STEPS, JSON.stringify(steps));
+    }
   } catch (err) {
     console.error('Failed to save process steps to localStorage', err);
   }
 }
 
 export function resetToDefaults(): { works: WorkItem[]; content: SiteContent; steps: ProcessStep[] } {
-  localStorage.removeItem(STORAGE_KEYS.WORKS);
-  localStorage.removeItem(STORAGE_KEYS.SITE_CONTENT);
-  localStorage.removeItem(STORAGE_KEYS.PROCESS_STEPS);
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.removeItem(STORAGE_KEYS.WORKS);
+      window.localStorage.removeItem(STORAGE_KEYS.SITE_CONTENT);
+      window.localStorage.removeItem(STORAGE_KEYS.PROCESS_STEPS);
+    }
+  } catch (err) {
+    console.warn('Failed to clear localStorage keys', err);
+  }
   return {
     works: INITIAL_WORKS,
     content: INITIAL_SITE_CONTENT,

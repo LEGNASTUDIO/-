@@ -34,7 +34,14 @@ export default function App() {
   // Admin state
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(() => {
-    return sessionStorage.getItem('legna_admin_auth') === 'true';
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        return window.sessionStorage.getItem('legna_admin_auth') === 'true';
+      }
+    } catch {
+      // Ignore security errors in restricted iframe/browser environments
+    }
+    return false;
   });
 
   // Handle navigating to contact with a specific work inquiry
@@ -46,12 +53,24 @@ export default function App() {
 
   const handleAdminLogin = () => {
     setIsAdminLoggedIn(true);
-    sessionStorage.setItem('legna_admin_auth', 'true');
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        window.sessionStorage.setItem('legna_admin_auth', 'true');
+      }
+    } catch {
+      // Ignore
+    }
   };
 
   const handleAdminLogout = () => {
     setIsAdminLoggedIn(false);
-    sessionStorage.removeItem('legna_admin_auth');
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        window.sessionStorage.removeItem('legna_admin_auth');
+      }
+    } catch {
+      // Ignore
+    }
   };
 
   const handleSaveWorks = (updatedWorks: WorkItem[]) => {

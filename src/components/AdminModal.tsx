@@ -1737,16 +1737,25 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                       ref={heroPreviewContainerRef}
                       onMouseDown={handleHeroMouseDown}
                       onTouchStart={handleHeroTouchStart}
-                      className={`aspect-[16/9] sm:aspect-[21/9] w-full bg-[#EAE6DC] border-2 ${
+                      className={`aspect-[16/9] sm:aspect-[21/9] w-full border-2 ${
                         isDraggingHero ? 'border-amber-700 cursor-grabbing' : 'border-[#171717]/40 cursor-grab hover:border-[#171717]'
-                      } overflow-hidden relative shadow-inner select-none transition-colors group`}
+                      } overflow-hidden relative shadow-inner select-none transition-all group`}
+                      style={{
+                        backgroundColor: (localContent.heroImageBgColor || '#EAE6DC') === 'blur' ? undefined : (localContent.heroImageBgColor || '#EAE6DC'),
+                      }}
                       title="마우스로 사진을 끌어서 원하는 부분을 맞춰보세요"
                     >
                       {localContent.heroMainImage ? (
                         <img
                           src={localContent.heroMainImage}
                           alt="Hero Main Preview"
-                          className="w-full h-full object-cover pointer-events-none transition-[object-position] duration-75"
+                          className={`w-full h-full pointer-events-none transition-[object-position] duration-75 ${
+                            (localContent.heroImageFitMode || 'cover') === 'contain'
+                              ? 'object-contain p-2'
+                              : (localContent.heroImageFitMode || 'cover') === 'natural'
+                              ? 'object-contain w-auto h-auto mx-auto max-h-full'
+                              : 'object-cover'
+                          }`}
                           style={{
                             objectPosition: `${localContent.heroImagePositionX ?? 50}% ${localContent.heroImagePositionY ?? 50}%`,
                             transform: localContent.heroImageZoom && localContent.heroImageZoom !== 100 ? `scale(${localContent.heroImageZoom / 100})` : undefined,
